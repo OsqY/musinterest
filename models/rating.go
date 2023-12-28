@@ -1,7 +1,7 @@
 package models
 
 import (
-	"oscar/musinterest/musinterest/database"
+	"oscar/musinterest/database"
 
 	"gorm.io/gorm"
 )
@@ -9,8 +9,9 @@ import (
 type Rating struct {
 	gorm.Model
 	Rate    float32 `gorm:"size:1;not null" json:"rating"`
-	UserID  uint
-	AlbumID uint
+	Comment string  `gorm:"size255;not null" json"comment"`
+	UserId  uint
+	AlbumId uint
 }
 
 func (rating *Rating) Save() (*Rating, error) {
@@ -19,4 +20,12 @@ func (rating *Rating) Save() (*Rating, error) {
 	}
 
 	return rating, nil
+}
+
+func FindRatingById(ratingId uint, userId uint) (*Rating, error) {
+	var rating Rating
+	if err := database.Database.Where("id = ? AND user_id = ?", ratingId, userId).First(&rating).Error; err != nil {
+		return nil, err
+	}
+	return &rating, nil
 }

@@ -4,12 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"oscar/musinterest/musinterest/models"
+	"oscar/musinterest/models"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
 )
@@ -21,7 +20,7 @@ func GenerateJWT(user models.User) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"id":  user.ID,
 		"iat": time.Now().Unix(),
-		"eat": time.Now.Add(time.Second * time.Duration(tokenTTL)).Unix(),
+		"eat": time.Now().Add(time.Second * time.Duration(tokenTTL)).Unix(),
 	})
 	return token.SignedString(privateKey)
 }

@@ -2,7 +2,7 @@ package models
 
 import (
 	"html"
-	"oscar/musinterest/musinterest/database"
+	"oscar/musinterest/database"
 	"strings"
 
 	"golang.org/x/crypto/bcrypt"
@@ -14,6 +14,7 @@ type User struct {
 	Email    string `gorm:"size:255;not null;unique" json:"email"`
 	Username string `gorm:"size:40;not null;unique" json:"username"`
 	Password string `gorm:"size 60;not null" json:"-"`
+	Ratings  []Rating
 }
 
 func (user *User) Save() (*User, error) {
@@ -41,6 +42,14 @@ func (user *User) ValidatePassword(password string) error {
 func FindUserById(id uint) (User, error) {
 	var user User
 	if err := database.Database.Where("id = ?", id).Find(&user).Error; err != nil {
+		return User{}, err
+	}
+	return user, nil
+}
+
+func FindByUsername(username string) (User, error) {
+	var user User
+	if err := database.Database.Where("username = ?", username).Find(&user).Error; err != nil {
 		return User{}, err
 	}
 	return user, nil

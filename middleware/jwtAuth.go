@@ -2,7 +2,7 @@ package middleware
 
 import (
 	"net/http"
-	"oscar/musinterest/musinterest/helpers"
+	"oscar/musinterest/helpers"
 
 	"github.com/gin-gonic/gin"
 )
