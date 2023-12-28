@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"oscar/musinterest/database"
@@ -8,6 +9,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 func GetAlbums(context *gin.Context) {
@@ -41,7 +43,6 @@ func GetAlbumByName(context *gin.Context) {
 		return
 	}
 	context.JSON(http.StatusOK, gin.H{"data": albums})
-
 }
 
 func GetAlbumById(context *gin.Context) {
@@ -56,5 +57,15 @@ func GetAlbumById(context *gin.Context) {
 		context.JSON(http.StatusBadRequest, gin.H{"error": "That id doesn't exists"})
 		return
 	}
+
+	if err := database.Database.Preload("Ratings").First(&album, albumId).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			context.JSON(http.StatusNotFound, gin.H{"error": "Record not found!"})
+			return
+		}
+		context.JSON(http.StatusInternalServerError, gin.H{"error": "Something went wrong!"})
+		return
+	}
 	context.JSON(http.StatusOK, gin.H{"data": album})
+
 }

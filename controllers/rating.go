@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"errors"
 	"net/http"
 	"oscar/musinterest/database"
 	"oscar/musinterest/helpers"
@@ -8,6 +9,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 func AddRating(context *gin.Context) {
@@ -40,25 +42,31 @@ func AddRating(context *gin.Context) {
 		return
 	}
 
+	if album.ID == 0 {
+		context.JSON(http.StatusBadRequest, gin.H{"error": "That album doesn't exists"})
+		return
+	}
+
+	if err := database.Database.Preload("Ratings").First(album, uint(albumId)).Error; err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{"error": "That album doesn't exists"})
+		return
+	}
+
 	rating := models.Rating{
 		Rate:    input.Rate,
 		Comment: input.Comment,
 		UserId:  input.UserId,
 		AlbumId: input.AlbumId,
+		Album:   album,
 	}
 
-	savedRating, err := rating.Save()
+	_, err = rating.Save()
 	if err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"error": "Something went wrong!"})
 		return
 	}
-	album.Ratings = append(album.Ratings, *savedRating)
-	if err := database.Database.Save(&album).Error; err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{"error": "Something went wrong!"})
-		return
-	}
 
-	context.JSON(http.StatusCreated, gin.H{"data": savedRating})
+	context.JSON(http.StatusCreated, gin.H{"data": rating})
 }
 
 func GetRatingById(context *gin.Context) {
@@ -70,11 +78,14 @@ func GetRatingById(context *gin.Context) {
 	}
 
 	var rating models.Rating
-	if err := database.Database.First(&rating, ratingId).Error; err != nil {
-		context.JSON(http.StatusBadRequest, gin.H{"error": "That rating doesn't exists"})
+	if err := database.Database.Preload("Album").First(&rating, ratingId).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			context.JSON(http.StatusNotFound, gin.H{"error": "Record not found!"})
+			return
+		}
+		context.JSON(http.StatusInternalServerError, gin.H{"error": err})
 		return
 	}
-
 	context.JSON(http.StatusOK, gin.H{"data": rating})
 
 }

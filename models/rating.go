@@ -12,6 +12,7 @@ type Rating struct {
 	Comment string  `gorm:"size255;not null" json"comment"`
 	UserId  uint
 	AlbumId uint
+	Album   *Album `gorm:"foreignKey:AlbumId"`
 }
 
 func (rating *Rating) Save() (*Rating, error) {
