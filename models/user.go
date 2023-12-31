@@ -2,7 +2,7 @@ package models
 
 import (
 	"html"
-	"oscar/musinterest/database"
+	"oscar/musinterest/initializers"	
 	"strings"
 
 	"golang.org/x/crypto/bcrypt"
@@ -14,11 +14,12 @@ type User struct {
 	Email    string `gorm:"size:255;not null;unique" json:"email"`
 	Username string `gorm:"size:40;not null;unique" json:"username"`
 	Password string `gorm:"size 60;not null" json:"-"`
+	Verified bool   `gorm:"not null" json:"verified"`
 	Ratings  []Rating
 }
 
 func (user *User) Save() (*User, error) {
-	if err := database.Database.Create(&user).Error; err != nil {
+	if err := initializers.DB.Create(&user).Error; err != nil {
 		return &User{}, err
 	}
 
@@ -41,7 +42,7 @@ func (user *User) ValidatePassword(password string) error {
 
 func FindUserById(id uint) (User, error) {
 	var user User
-	if err := database.Database.Where("id = ?", id).Find(&user).Error; err != nil {
+	if err := initializers.DB.Where("id = ?", id).Find(&user).Error; err != nil {
 		return User{}, err
 	}
 	return user, nil
@@ -49,7 +50,7 @@ func FindUserById(id uint) (User, error) {
 
 func FindByUsername(username string) (User, error) {
 	var user User
-	if err := database.Database.Where("username = ?", username).Find(&user).Error; err != nil {
+	if err := initializers.DB.Where("username = ?", username).Find(&user).Error; err != nil {
 		return User{}, err
 	}
 	return user, nil

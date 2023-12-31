@@ -1,54 +1,62 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"oscar/musinterest/controllers"
-	"oscar/musinterest/database"
-	"oscar/musinterest/middleware"
+	"oscar/musinterest/initializers"
+	"oscar/musinterest/routes"
 	"oscar/musinterest/models"
 
 	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
+
+    )
+var   (
+	    server		  *gin.Engine
+	    AuthController	  controllers.AuthController
+	    AuthRouteController	  routes.AuthRouteController
+	
+	    AlbumController	  controllers.AlbumController
+	    AlbumRouteController  routes.AlbumRouteController
+	
+	    RatingController 	  controllers.RatingController
+	    RatingRouteController routes.RatingRouteController
 )
 
-func main() {
-	loadEnv()
-	loadDatabase()
-	servApplication()
-}
-
-func loadDatabase() {
-	database.Connect()
-	database.Database.AutoMigrate(&models.User{})
-	database.Database.AutoMigrate(&models.Album{})
-	database.Database.AutoMigrate(&models.Rating{})
-}
-
-func loadEnv() {
-	if err := godotenv.Load(".env.local"); err != nil {
-		log.Fatal("Error loading .env file")
+func init() {
+	config, err := initializers.LoadConfig(".")
+	if err != nil {
+		log.Fatal("Could not load environment variables ", err)
 	}
+
+	initializers.ConnectDB(&config)
+
+	AuthController = controllers.NewAuthController(initializers.DB)
+	AuthRouteController = routes.NewAuthRouteController(AuthController)
+
+	AlbumController = controllers.NewAlbumController(initializers.DB)
+	AlbumRouteController = routes.NewRouteAlbumController(AlbumController)
+
+	RatingController = controllers.NewRatingController(initializers.DB)
+	RatingRouteController = routes.NewRouteRatingController(RatingController)
+
+	server = gin.Default()
 }
 
-func servApplication() {
-	router := gin.Default()
+func main() {
+    _, err := initializers.LoadConfig(".")
+    
+    if err != nil {
+	log.Fatal("Couldn't load env variables")
+    }
+	initializers.DB.AutoMigrate(&models.Rating{})
+	initializers.DB.AutoMigrate(&models.Album{})
+	initializers.DB.AutoMigrate(&models.User{})
 
-	publicRoutes := router.Group("/auth")
-	publicRoutes.POST("/register", controllers.Register)
-	publicRoutes.POST("/login", controllers.Login)
+    router := server.Group("/")
+    AuthRouteController.AuthRoute(router)
+    AlbumRouteController.AlbumRoute(router)
+    RatingRouteController.RatingRoute(router)
 
-	router.GET("/albums", controllers.GetAlbums)
-	router.GET("/albums/:albumId", controllers.GetAlbumById)
-	router.GET("/albums/search", controllers.GetAlbumByName)
-	router.GET("/rating/:ratingId", controllers.GetRatingById)
-
-	authenticatedRoutes := router.Group("/api")
-	authenticatedRoutes.Use(middleware.JWTAuthMiddleware())
-	authenticatedRoutes.POST("/rateAlbum/:albumId", controllers.AddRating)
-	authenticatedRoutes.PUT("/rateAlbum/:ratingId", controllers.UpdateRating)
-	authenticatedRoutes.DELETE("/rateAlbum/:ratingId", controllers.DeleteRating)
-
-	router.Run(":8000")
-	fmt.Println("Server running on port 8000")
+    server.Run(":8000")
 }
+

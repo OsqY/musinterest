@@ -1,0 +1,16 @@
+package utils
+
+import "encoding/base64"
+
+func Encode(str string) string {
+	data := base64.StdEncoding.EncodeToString([]byte(str))
+	return string(data)
+}
+
+func Decode(str string) (string, error) {
+	data, err := base64.StdEncoding.DecodeString(str)
+	if err != nil {
+		return "", err
+	}
+	return string(data), nil
+}

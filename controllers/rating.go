@@ -3,16 +3,25 @@ package controllers
 import (
 	"errors"
 	"net/http"
-	"oscar/musinterest/database"
 	"oscar/musinterest/helpers"
-	"oscar/musinterest/models"
+	"oscar/musinterest/models"	
+	"oscar/musinterest/initializers"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
 
-func AddRating(context *gin.Context) {
+type RatingController struct {
+	DB *gorm.DB
+}
+
+func NewRatingController(DB *gorm.DB) RatingController {
+	return RatingController{DB}
+}
+
+
+func (rc *RatingController) AddRating(context *gin.Context) {
 	var input models.RatingInput
 
 	if err := context.ShouldBindJSON(&input); err != nil {
@@ -47,7 +56,7 @@ func AddRating(context *gin.Context) {
 		return
 	}
 
-	if err := database.Database.Preload("Ratings").First(album, uint(albumId)).Error; err != nil {
+	if err := initializers.DB.Preload("Ratings").First(album, uint(albumId)).Error; err != nil {
 		context.JSON(http.StatusBadRequest, gin.H{"error": "That album doesn't exists"})
 		return
 	}
@@ -57,7 +66,6 @@ func AddRating(context *gin.Context) {
 		Comment: input.Comment,
 		UserId:  input.UserId,
 		AlbumId: input.AlbumId,
-		Album:   album,
 	}
 
 	_, err = rating.Save()
@@ -69,7 +77,7 @@ func AddRating(context *gin.Context) {
 	context.JSON(http.StatusCreated, gin.H{"data": rating})
 }
 
-func GetRatingById(context *gin.Context) {
+func (rc *RatingController) GetRatingById(context *gin.Context) {
 
 	ratingId, err := strconv.Atoi(context.Param("ratingId"))
 	if err != nil {
@@ -78,7 +86,7 @@ func GetRatingById(context *gin.Context) {
 	}
 
 	var rating models.Rating
-	if err := database.Database.Preload("Album").First(&rating, ratingId).Error; err != nil {
+	if err := initializers.DB.First(&rating, ratingId).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			context.JSON(http.StatusNotFound, gin.H{"error": "Record not found!"})
 			return
@@ -90,7 +98,7 @@ func GetRatingById(context *gin.Context) {
 
 }
 
-func UpdateRating(context *gin.Context) {
+func (rc *RatingController) UpdateRating(context *gin.Context) {
 	currentUser, err := helpers.GetCurrentUser(context)
 	if err != nil {
 		context.JSON(http.StatusUnauthorized, gin.H{"error": "Not authorized"})
@@ -114,14 +122,14 @@ func UpdateRating(context *gin.Context) {
 	}
 	rating.Rate = newRating.Rate
 	rating.Comment = newRating.Comment
-	if err := database.Database.Model(&rating).Updates(models.Rating{Rate: rating.Rate, Comment: rating.Comment}).Error; err != nil {
+	if err := initializers.DB.Model(&rating).Updates(models.Rating{Rate: rating.Rate, Comment: rating.Comment}).Error; err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"error": "Something wrong happened!"})
 		return
 	}
 	context.JSON(http.StatusOK, gin.H{"data": rating})
 }
 
-func DeleteRating(context *gin.Context) {
+func (rc *RatingController) DeleteRating(context *gin.Context) {
 	currentUser, err := helpers.GetCurrentUser(context)
 	if err != nil {
 		context.JSON(http.StatusUnauthorized, gin.H{"error": "Not authorized"})
@@ -137,7 +145,7 @@ func DeleteRating(context *gin.Context) {
 		context.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ratingId"})
 		return
 	}
-	if err := database.Database.Where("id = ?", uint(ratingId)).Delete(&rating).Error; err != nil {
+	if err := initializers.DB.Where("id = ?", uint(ratingId)).Delete(&rating).Error; err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"error": "Something wrong happened!"})
 		return
 	}
