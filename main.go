@@ -11,15 +11,19 @@ import (
 
     )
 var   (
-	    server		  *gin.Engine
-	    AuthController	  controllers.AuthController
-	    AuthRouteController	  routes.AuthRouteController
+
+  server		  *gin.Engine
+  AuthController	  controllers.AuthController
+  AuthRouteController	  routes.AuthRouteController
 	
-	    AlbumController	  controllers.AlbumController
-	    AlbumRouteController  routes.AlbumRouteController
+  AlbumController	  controllers.AlbumController
+  AlbumRouteController  routes.AlbumRouteController
 	
-	    RatingController 	  controllers.RatingController
-	    RatingRouteController routes.RatingRouteController
+  RatingController 	  controllers.RatingController
+  RatingRouteController routes.RatingRouteController
+
+  DiscussionForumController controllers.DiscussionForumController
+  DiscussionForumRouteController routes.DiscussionForumRouteController
 )
 
 func init() {
@@ -39,6 +43,9 @@ func init() {
 	RatingController = controllers.NewRatingController(initializers.DB)
 	RatingRouteController = routes.NewRouteRatingController(RatingController)
 
+  DiscussionForumController = controllers.NewDiscussionForumController(initializers.DB)
+  DiscussionForumRouteController = routes.NewDiscussionForumRouteController(DiscussionForumController)
+
 	server = gin.Default()
 }
 
@@ -51,6 +58,8 @@ func main() {
 	initializers.DB.AutoMigrate(&models.Rating{})
 	initializers.DB.AutoMigrate(&models.Album{})
 	initializers.DB.AutoMigrate(&models.User{})
+  initializers.DB.AutoMigrate(&models.DiscussionForum{})
+  initializers.DB.AutoMigrate(&models.Comment{})
 
     router := server.Group("/")
     AuthRouteController.AuthRoute(router)

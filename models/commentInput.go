@@ -1,6 +1,7 @@
 package models
 
 type CommentInput struct {
-        UserId uint `json:"username" binding:"required"`
-        Body string `json:"bodyOfTheComment" binding:"required"`
+  DiscussionForumId uint `json:"discussionId" binding:"required" `
+  UserId uint `json:"userId" binding:"required"`
+  Body string `json:"bodyOfTheComment" binding:"required"`
 }

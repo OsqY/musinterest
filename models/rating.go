@@ -9,7 +9,7 @@ import (
 type Rating struct {
 	gorm.Model
 	Rate    float32 `gorm:"size:1;not null" json:"rating"`
-	Comment string  `gorm:"size255;not null" json"comment"`
+  Comment string  `gorm:"size255;not null" json:"comment"`
 	UserId  uint
 	AlbumId uint
 }
