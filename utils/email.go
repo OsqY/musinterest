@@ -3,7 +3,6 @@ package utils
 import (
 	"bytes"
 	"crypto/tls"
-	"fmt"
 	"html/template"
 	"log"
 	"os"
@@ -15,7 +14,12 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/k3a/html2text"
 	"gopkg.in/gomail.v2"
+	"gorm.io/gorm"
 )
+
+type Database struct {
+	DB *gorm.DB
+}
 
 type EmailData struct {
 	URL       string
@@ -27,7 +31,6 @@ func ParseTemplateDir(dir string) (*template.Template, error) {
 	var paths []string
 
 	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
-
 		if err != nil {
 			return err
 		}
@@ -38,7 +41,6 @@ func ParseTemplateDir(dir string) (*template.Template, error) {
 
 		return nil
 	})
-
 	if err != nil {
 		return nil, err
 	}
@@ -47,9 +49,8 @@ func ParseTemplateDir(dir string) (*template.Template, error) {
 }
 
 func SendEmail(user *models.User, data *EmailData) {
-    	godotenv.Load(".env.local")
+	godotenv.Load(".env.local")
 	_, err := initializers.LoadConfig(".")
-
 	if err != nil {
 		log.Fatal("Could not load config", err)
 		return
@@ -75,11 +76,10 @@ func SendEmail(user *models.User, data *EmailData) {
 
 	port, err := strconv.Atoi(os.Getenv("SMTP_PORT"))
 	if err != nil {
-	    log.Fatal("Could not parse smtp port", err)
-	    return
+		log.Fatal("Could not parse smtp port", err)
+		return
 	}
 
-	fmt.Println(port)
 	d := gomail.NewDialer(os.Getenv("SMTP_HOST"), port, os.Getenv("SMTP_USER"), os.Getenv("SMTP_PASS"))
 	d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
 
@@ -87,4 +87,5 @@ func SendEmail(user *models.User, data *EmailData) {
 		log.Fatal("Could not send email", err)
 		return
 	}
+	user.Verified = true
 }

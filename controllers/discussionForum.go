@@ -33,7 +33,7 @@ func (dc *DiscussionForumController) CreateDiscussion(context *gin.Context) {
   } 
 
   discussionForum := models.DiscussionForum {
-    DiscussionOwner: user,
+    UserId: user.ID,
     Title: input.Title,
     Description: input.Description, 
   }

@@ -7,16 +7,17 @@ import (
 )
 
 type AlbumRouteController struct {
-    albumController controllers.AlbumController
+	albumController controllers.AlbumController
 }
 
 func NewRouteAlbumController(albumController controllers.AlbumController) AlbumRouteController {
-    return AlbumRouteController{albumController}
+	return AlbumRouteController{albumController}
 }
 
 func (ac *AlbumRouteController) AlbumRoute(rg *gin.RouterGroup) {
-    router := rg.Group("/albums")
+	router := rg.Group("/albums")
 
-    router.GET("/", ac.albumController.GetAlbums, ac.albumController.GetAlbumByName)
-    router.GET("/:albumId", ac.albumController.GetAlbumById)
+	router.GET("/", ac.albumController.GetAlbums)
+	router.GET("/album", ac.albumController.GetAlbumByName)
+	router.GET("/:albumId", ac.albumController.GetAlbumById)
 }

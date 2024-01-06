@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"oscar/musinterest/models"
 	"oscar/musinterest/initializers"
+	"oscar/musinterest/models"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -19,7 +19,6 @@ type AlbumController struct {
 func NewAlbumController(DB *gorm.DB) AlbumController {
 	return AlbumController{DB}
 }
-
 
 func (ac *AlbumController) GetAlbums(context *gin.Context) {
 	page, _ := strconv.Atoi(context.DefaultQuery("page", "1"))
@@ -76,5 +75,4 @@ func (ac *AlbumController) GetAlbumById(context *gin.Context) {
 		return
 	}
 	context.JSON(http.StatusOK, gin.H{"data": album})
-
 }

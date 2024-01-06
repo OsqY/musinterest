@@ -2,6 +2,7 @@ package routes
 
 import (
 	"oscar/musinterest/controllers"
+	"oscar/musinterest/middleware"
 
 	"github.com/gin-gonic/gin"
 )
@@ -17,5 +18,6 @@ func NewDiscussionForumRouteController(discussionForumController controllers.Dis
 func (dfrc *DiscussionForumRouteController) DiscussionForumRoute(rg *gin.RouterGroup) {
   router := rg.Group("/discussions")
 
+  router.Use(middleware.JWTAuthMiddleware())
   router.POST("/create", dfrc.DiscussionForumController.CreateDiscussion)
 }

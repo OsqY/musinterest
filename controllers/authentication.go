@@ -20,7 +20,7 @@ func NewAuthController(DB *gorm.DB) AuthController {
 	return AuthController{DB}
 }
 
-func (ac *AuthController)  Register(context *gin.Context) {
+func (ac *AuthController) Register(context *gin.Context) {
 	var input models.AuthenticationInput
 
 	if err := context.ShouldBindJSON(&input); err != nil {
@@ -34,7 +34,6 @@ func (ac *AuthController)  Register(context *gin.Context) {
 		Verified: false,
 	}
 	savedUser, err := user.Save()
-
 	if err != nil {
 		context.JSON(http.StatusBadRequest, gin.H{"err": err.Error()})
 		return
@@ -44,7 +43,7 @@ func (ac *AuthController)  Register(context *gin.Context) {
 
 	code := randstr.String(20)
 
-	var username = savedUser.Username
+	username := savedUser.Username
 
 	emailData := utils.EmailData{
 		URL:       config.ClientOrigin + "/verifyemail/" + code,
@@ -64,7 +63,6 @@ func (ac *AuthController) Login(context *gin.Context) {
 	}
 
 	user, err := models.FindByUsername(input.Username)
-
 	if err != nil {
 		context.JSON(http.StatusBadRequest, gin.H{"error": "That user doesn't exists"})
 		return
@@ -86,11 +84,11 @@ func (ac *AuthController) Login(context *gin.Context) {
 		return
 
 	}
+
 	context.JSON(http.StatusOK, gin.H{"jwt": jwt})
 }
 
 func (authController *AuthController) VerifyEmail(context *gin.Context) {
-
 	code := context.Params.ByName("verificationCode")
 	verificationCode := utils.Encode(code)
 
@@ -107,6 +105,5 @@ func (authController *AuthController) VerifyEmail(context *gin.Context) {
 
 	updatedUser.Verified = true
 	authController.DB.Save(&updatedUser)
-
 	context.JSON(http.StatusOK, gin.H{"status": "User verified!"})
 }
