@@ -31,7 +31,7 @@ func (ac *AuthController) Register(context *gin.Context) {
 		Email:    input.Email,
 		Username: input.Username,
 		Password: input.Password,
-		Verified: false,
+		Verified: true,
 	}
 	savedUser, err := user.Save()
 	if err != nil {
@@ -52,7 +52,7 @@ func (ac *AuthController) Register(context *gin.Context) {
 	}
 
 	utils.SendEmail(savedUser, &emailData)
-	context.JSON(http.StatusCreated, gin.H{"status": "success"})
+	context.JSON(http.StatusCreated, gin.H{"data": savedUser})
 }
 
 func (ac *AuthController) Login(context *gin.Context) {
@@ -82,7 +82,6 @@ func (ac *AuthController) Login(context *gin.Context) {
 	if err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
-
 	}
 
 	context.JSON(http.StatusOK, gin.H{"jwt": jwt})

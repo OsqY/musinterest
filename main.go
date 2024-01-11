@@ -75,6 +75,7 @@ func main() {
 	initializers.DB.AutoMigrate(&models.DiscussionForum{})
 	initializers.DB.AutoMigrate(&models.Comment{})
 
+	server.Use(CORSMiddleware())
 	router := server.Group("/")
 	router.Use(CORSMiddleware())
 

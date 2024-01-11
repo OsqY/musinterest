@@ -8,16 +8,17 @@ import (
 )
 
 type DiscussionForumRouteController struct {
-  DiscussionForumController controllers.DiscussionForumController
-} 
+	DiscussionForumController controllers.DiscussionForumController
+}
 
 func NewDiscussionForumRouteController(discussionForumController controllers.DiscussionForumController) DiscussionForumRouteController {
- return DiscussionForumRouteController{discussionForumController} 
+	return DiscussionForumRouteController{discussionForumController}
 }
 
 func (dfrc *DiscussionForumRouteController) DiscussionForumRoute(rg *gin.RouterGroup) {
-  router := rg.Group("/discussions")
+	router := rg.Group("/discussions")
 
-  router.Use(middleware.JWTAuthMiddleware())
-  router.POST("/create", dfrc.DiscussionForumController.CreateDiscussion)
+	router.GET("/", dfrc.DiscussionForumController.GetDiscussions)
+	router.Use(middleware.JWTAuthMiddleware())
+	router.POST("/create", dfrc.DiscussionForumController.CreateDiscussion)
 }
