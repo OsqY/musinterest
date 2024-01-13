@@ -12,15 +12,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type AlbumController struct {
-	DB *gorm.DB
-}
-
-func NewAlbumController(DB *gorm.DB) AlbumController {
-	return AlbumController{DB}
-}
-
-func (ac *AlbumController) GetAlbums(context *gin.Context) {
+func GetAlbums(context *gin.Context) {
 	page, _ := strconv.Atoi(context.DefaultQuery("page", "1"))
 	limit, _ := strconv.Atoi(context.DefaultQuery("limit", "10"))
 	sortBy := context.DefaultQuery("sort_by", "title")
@@ -41,7 +33,7 @@ func (ac *AlbumController) GetAlbums(context *gin.Context) {
 	context.JSON(http.StatusOK, albums)
 }
 
-func (ac *AlbumController) GetAlbumByName(context *gin.Context) {
+func GetAlbumByName(context *gin.Context) {
 	var albums []models.Album
 	title := context.Query("title")
 	result := initializers.DB.Where("title LIKE ?", "%"+title+"%").Find(&albums)
@@ -53,7 +45,7 @@ func (ac *AlbumController) GetAlbumByName(context *gin.Context) {
 	context.JSON(http.StatusOK, gin.H{"data": albums})
 }
 
-func (ac *AlbumController) GetAlbumById(context *gin.Context) {
+func GetAlbumById(context *gin.Context) {
 	albumId, err := strconv.Atoi(context.Param("albumId"))
 	if err != nil {
 		context.JSON(http.StatusBadRequest, gin.H{"error": "Invalid id!"})

@@ -1,54 +1,72 @@
 package controllers
 
 import (
+	"context"
 	"net/http"
-	"oscar/musinterest/helpers"
+	"os"
+	"oscar/musinterest/initializers"
 	"oscar/musinterest/models"
+	"strings"
 
+	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 )
 
-type DiscussionForumController struct {
-	DB *gorm.DB
-}
-
-func NewDiscussionForumController(DB *gorm.DB) DiscussionForumController {
-	return DiscussionForumController{DB}
-}
-
-func (dc *DiscussionForumController) CreateDiscussion(context *gin.Context) {
+func CreateDiscussion(ginContext *gin.Context) {
 	var input models.DiscussionForumInput
 
-	user, err := helpers.GetCurrentUser(context)
+	authHeader := ginContext.GetHeader("Authorization")
+	tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+
+	provider, err := oidc.NewProvider(context.Background(), os.Getenv("AUTH0_DOMAIN"))
 	if err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		ginContext.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	if err := context.ShouldBindJSON(&input); err != nil {
-		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	oidcConfig := &oidc.Config{
+		ClientID: os.Getenv("AUTH0_CLIENT_ID"),
+	}
+	verifier := provider.Verifier(oidcConfig)
+
+	idToken, err := verifier.Verify(context.Background(), tokenString)
+	if err != nil {
+		ginContext.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	var claims struct {
+		Sub string `json:"sub"`
+	}
+	if err := idToken.Claims(&claims); err != nil {
+		ginContext.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	auth0ID := claims.Sub
+
+	if err := ginContext.ShouldBindJSON(&input); err != nil {
+		ginContext.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	discussionForum := models.DiscussionForum{
-		UserId:      user.ID,
+		Auth0ID:     auth0ID,
 		Title:       input.Title,
 		Description: input.Description,
 	}
 
 	savedDiscussion, err := discussionForum.Save()
 	if err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		ginContext.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	context.JSON(http.StatusCreated, gin.H{"data": savedDiscussion})
+	ginContext.JSON(http.StatusCreated, gin.H{"data": savedDiscussion})
 }
 
-func (dc *DiscussionForumController) GetDiscussions(context *gin.Context) {
+func GetDiscussions(context *gin.Context) {
 	var discussions []models.DiscussionForum
 
-	result := dc.DB.Find(&discussions)
+	result := initializers.DB.Find(&discussions)
 
 	if result.Error != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"error": "Error retrieving discussions"})
